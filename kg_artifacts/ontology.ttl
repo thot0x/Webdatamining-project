@@ -1,0 +1,59 @@
+@prefix ex:  <http://example.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+# === Classes ===
+
+ex:Person a owl:Class ;
+    rdfs:label "Person"@en .
+
+ex:FootballPlayer a owl:Class ;
+    rdfs:subClassOf ex:Person ;
+    rdfs:label "Football Player"@en .
+
+ex:Club a owl:Class ;
+    rdfs:label "Football Club"@en .
+
+ex:Country a owl:Class ;
+    rdfs:label "Country"@en .
+
+ex:Place a owl:Class ;
+    rdfs:label "Place"@en .
+
+ex:Position a owl:Class ;
+    rdfs:label "Playing Position"@en .
+
+# === Object Properties ===
+
+ex:playsFor a owl:ObjectProperty ;
+    rdfs:domain ex:FootballPlayer ;
+    rdfs:range  ex:Club ;
+    rdfs:label  "plays for"@en .
+
+ex:hasNationality a owl:ObjectProperty ;
+    rdfs:domain ex:FootballPlayer ;
+    rdfs:range  ex:Country ;
+    rdfs:label  "has nationality"@en .
+
+ex:hasPosition a owl:ObjectProperty ;
+    rdfs:domain ex:FootballPlayer ;
+    rdfs:range  ex:Position ;
+    rdfs:label  "plays position"@en .
+
+ex:birthPlace a owl:ObjectProperty ;
+    rdfs:domain ex:FootballPlayer ;
+    rdfs:range  ex:Place ;
+    rdfs:label  "birth place"@en .
+
+# === Datatype Properties ===
+
+ex:birthDate a owl:DatatypeProperty ;
+    rdfs:domain ex:FootballPlayer ;
+    rdfs:range  xsd:date ;
+    rdfs:label  "birth date"@en .
+
+ex:heightM a owl:DatatypeProperty ;
+    rdfs:domain ex:FootballPlayer ;
+    rdfs:range  xsd:decimal ;
+    rdfs:label  "height in meters"@en .
