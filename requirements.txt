@@ -1,0 +1,28 @@
+#Core KG & Semantic Web
+rdflib>=6.3.2
+owlready2>=0.46
+SPARQLWrapper>=2.0.0
+
+#NLP / NER
+spacy>=3.7.0
+trafilatura>=1.6.0
+
+#Knowledge Graph Embeddings
+pykeen>=1.10.1
+torch>=2.0.0
+
+#Embedding analysis
+scikit-learn>=1.3.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+
+#Wikidata / web crawling
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+wikipedia-api>=0.6.0
+qwikidata>=0.4.2
+
+#Utilities
+pandas>=2.0.0
+tqdm>=4.66.0
+python-dotenv>=1.0.0
