@@ -1,0 +1,67 @@
+[
+  {
+    "question": "Which football players were born before 1920?",
+    "baseline": "Historical players: Billy Meredith (1874), Steve Bloomer (1874), Bob Crompton (1879), Sam Hardy (1883)...",
+    "baseline_source": "LLM (gemma:2b) sans KB",
+    "rag": {
+      "answer": "Trouvé 20 résultat(s) :\n  GeorgeObrien | George O'Brien\n  AHAlbut | A. H. Albut\n  AlbertZoepfel | Albert Zoepfel\n  AlexRobertson | Alex Robertson\n  BillMccartney | Bill McCartney\n  BobMcfarlane | Bob McFarlane\n  ErichWeber | Erich Weber\n  ErnstSchottelius | Ernst Schottelius\n  HansBermhler | Hans Bermühler\n  HermannGeis | Hermann Geis",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:birthDate ?date .\n  FILTER(?date < \"1920-01-01\"^^xsd:date)\n} ORDER BY ?date LIMIT 20",
+      "attempts": 1,
+      "success": true,
+      "n_results": 20,
+      "time_s": 15.49
+    }
+  },
+  {
+    "question": "Which players have French nationality?",
+    "baseline": "French players: Zidane, Platini, Thierry Henry, Mbappe, Griezmann, Cantona, Desailly...",
+    "baseline_source": "LLM (gemma:2b) sans KB",
+    "rag": {
+      "answer": "Trouvé 20 résultat(s) :\n  AlexSong | Alex Song\n  AliBenarbia | Ali Benarbia\n  AliouneTour | Alioune Touré\n  AlouDiarra | Alou Diarra\n  AlyCissokho | Aly Cissokho\n  AnthonyLeTallec | Anthony Le Tallec\n  AntoineSibierski | Antoine Sibierski\n  AurlienTchouamni | Aurélien Tchouaméni\n  BacarySagna | Bacary Sagna\n  BernardDiomde | Bernard Diomède",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:hasNationality ex:France .\n} LIMIT 20",
+      "attempts": 1,
+      "success": true,
+      "n_results": 20,
+      "time_s": 7.23
+    }
+  },
+  {
+    "question": "Which players play for Manchester United?",
+    "baseline": "Man United players: Rashford, Bruno Fernandes, Dalot, Onana, Maguire, Mount...",
+    "baseline_source": "LLM (gemma:2b) sans KB",
+    "rag": {
+      "answer": "Trouvé 20 résultat(s) :\n  AHAlbut | A. H. Albut\n  AaronHulme | Aaron Hulme\n  AaronTravis | Aaron Travis\n  AdamCarson | Adam Carson\n  AdamEckersley | Adam Eckersley\n  AdnanJanuzaj | Adnan Januzaj\n  AidanBarlow | Aidan Barlow\n  AidanMurphy | Aidan Murphy\n  AlanBrazil | Alan Brazil\n  AlanDavies | Alan Davies",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:playsFor ex:ManchesterUnited .\n} LIMIT 20",
+      "attempts": 1,
+      "success": true,
+      "n_results": 20,
+      "time_s": 7.16
+    }
+  },
+  {
+    "question": "Which players were born before 1990 and have United Kingdom nationality?",
+    "baseline": "UK players born before 1990: Beckham (1975), Gerrard (1980), Lampard (1978), Scholes (1974), Rooney (1985)...",
+    "baseline_source": "LLM (gemma:2b) sans KB",
+    "rag": {
+      "answer": "Trouvé 20 résultat(s) :\n  AHAlbut | A. H. Albut | 1849-01-01\n  AaronHulme | Aaron Hulme | 1886-04-01\n  AaronTravis | Aaron Travis | 1890-03-28\n  AbeHartley | Abe Hartley | 1872-02-08\n  AbeRosenthal | Abe Rosenthal | 1921-10-12\n  AbelXavier | Abel Xavier | 1972-11-30\n  AbelardoFernndez | Abelardo Fernández | 1970-03-19\n  AbelardoRiera | Abelardo Riera | 1912-12-13\n  AbrahamFoxall | Abraham Foxall | 1874-01-01\n  AbrahamGonzlezCasanova | Abraham González Casanova | 1985-07-16",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label ?date WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:birthDate ?date .\n  FILTER(?date < \"1990-01-01\"^^xsd:date)\n} LIMIT 20",
+      "attempts": 2,
+      "success": true,
+      "n_results": 20,
+      "time_s": 17.72
+    }
+  },
+  {
+    "question": "List all football players born after 2000.",
+    "baseline": "Young players: Bellingham (2003), Gavi (2004), Pedri (2002), Camavinga (2002), Yamal (2007)...",
+    "baseline_source": "LLM (gemma:2b) sans KB",
+    "rag": {
+      "answer": "Requête exécutée — aucun résultat dans la KB.",
+      "sparql": "PREFIX rdfs: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://example.com/>\n\nSELECT ?player ?label ?date WHERE {\n  ?player rdfs:label ?label .\n  ?player ex:birthDate ?date .\n  FILTER(?date > \"2000-01-01\"^^xsd:date)\n} LIMIT 20",
+      "attempts": 4,
+      "success": true,
+      "n_results": 0,
+      "time_s": 34.4
+    }
+  }
+]
