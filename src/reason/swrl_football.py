@@ -24,74 +24,61 @@ FOOTBALL_NS = "http://example.org/football#"
 # ── Build minimal football ontology (if ontology.ttl not available) ───────────
 
 def build_football_ontology(onto):
-    """Classes, properties and sample players."""
+    """
+    Ajoute classes, propriétés et joueurs de démo dans l'ontologie.
+    Utilise ex:birthDate (xsd:date) pour correspondre à la vraie KB
+    et au fallback Python qui lit cette propriété.
+    """
     with onto:
-        # ── Classes
-        class Agent(Thing): pass
-
-        class FootballPlayer(Agent):
-            """A professional football (soccer) player."""
-            pass
-
-        class VeteranPlayer(FootballPlayer):
-            """Player born before 1990 — inferred by SWRL rule."""
-            pass
+        # ── Classes (déclarées seulement si absentes)
+        FP_existing = onto.search_one(iri="*FootballPlayer")
+        if FP_existing is None:
+            class FootballPlayer(Thing):
+                """A professional football player."""
+                pass
+        else:
+            FootballPlayer = FP_existing
 
         class Club(Thing): pass
-        class League(Thing): pass
-        class Country(Thing): pass
 
-        # ── Data properties
-        class hasName(DataProperty, FunctionalProperty):
-            domain = [Agent]; range = [str]
+        # ── Propriété birthDate (xsd:date sous forme str)
+        bd_existing = onto.search_one(iri="*birthDate")
+        if bd_existing is None:
+            class birthDate(DataProperty, FunctionalProperty):
+                domain = [FootballPlayer]; range = [str]
 
-        class hasBirthYear(DataProperty, FunctionalProperty):
-            domain = [FootballPlayer]; range = [int]
-
-        class hasNationality(DataProperty, FunctionalProperty):
-            domain = [FootballPlayer]; range = [str]
-
-        class hasPosition(DataProperty, FunctionalProperty):
-            domain = [FootballPlayer]; range = [str]
-
-        class hasMarketValueEUR(DataProperty, FunctionalProperty):
-            domain = [FootballPlayer]; range = [float]
-
-        # ── Object properties
-        class playsFor(ObjectProperty):
-            domain = [FootballPlayer]; range = [Club]
-
-        class competesin(ObjectProperty):
-            domain = [Club]; range = [League]
-
-        # ── Sample players (famous players across eras)
+        # ── Joueurs de démo avec birthDate au format YYYY-MM-DD
         players = [
-            # (name, birth_year, nation, position, club_name)
-            ("Cristiano_Ronaldo", 1985, "Portugal",    "Forward",    "Al_Nassr"),
-            ("Lionel_Messi",      1987, "Argentina",   "Forward",    "Inter_Miami"),
-            ("Luka_Modric",       1985, "Croatia",     "Midfielder", "Real_Madrid"),
-            ("Kylian_Mbappe",     1998, "France",      "Forward",    "Real_Madrid"),
-            ("Vinicius_Jr",       2000, "Brazil",      "Forward",    "Real_Madrid"),
-            ("Erling_Haaland",    2000, "Norway",      "Forward",    "Man_City"),
-            ("Xavi_Hernandez",    1980, "Spain",       "Midfielder", "Al_Sadd"),
-            ("Iker_Casillas",     1981, "Spain",       "Goalkeeper", "Retired"),
-            ("Thierry_Henry",     1977, "France",      "Forward",    "Retired"),
-            ("Zinedine_Zidane",   1972, "France",      "Midfielder", "Retired"),
+            ("Cristiano_Ronaldo", "1985-02-05", "Portugal",  "Al_Nassr"),
+            ("Lionel_Messi",      "1987-06-24", "Argentina", "Inter_Miami"),
+            ("Luka_Modric",       "1985-09-09", "Croatia",   "Real_Madrid"),
+            ("Kylian_Mbappe",     "1998-12-20", "France",    "Real_Madrid"),
+            ("Vinicius_Jr",       "2000-07-12", "Brazil",    "Real_Madrid"),
+            ("Erling_Haaland",    "2000-07-21", "Norway",    "Man_City"),
+            ("Xavi_Hernandez",    "1980-01-25", "Spain",     "Al_Sadd"),
+            ("Iker_Casillas",     "1981-05-20", "Spain",     "Retired"),
+            ("Thierry_Henry",     "1977-08-17", "France",    "Retired"),
+            ("Zinedine_Zidane",   "1972-06-23", "France",    "Retired"),
         ]
 
+        FP = onto.search_one(iri="*FootballPlayer")
+        bd = onto.search_one(iri="*birthDate")
+
         clubs_created = {}
-        for name, year, nation, pos, club_name in players:
-            p              = FootballPlayer(name)
-            p.hasName      = name.replace("_", " ")
-            p.hasBirthYear = year
-            p.hasNationality = nation
-            p.hasPosition  = pos
+        for name, bdate, nation, club_name in players:
+            p = FP(name)
+            # Assigner birthDate
+            if bd is not None:
+                bd[p] = [bdate]
+            # Label comme nom lisible
+            try:
+                from owlready2 import locstr
+                p.label = [locstr(name.replace("_", " "), "en")]
+            except Exception:
+                pass
 
             if club_name not in clubs_created:
-                c = Club(club_name)
-                c.hasName = club_name.replace("_", " ")
-                clubs_created[club_name] = c
-            p.playsFor.append(clubs_created[club_name])
+                clubs_created[club_name] = Club(club_name)
 
     return onto
 
@@ -175,9 +162,14 @@ def add_swrl_rules(onto):
 # ── Manual fallback ───────────────────────────────────────────────────────────
 
 def _parse_year(val) -> int | None:
-    """Extrait l'année depuis un xsd:date ('YYYY-MM-DD'), int ou str."""
+    """Extrait l'année depuis un xsd:date, int, str ou liste."""
     if val is None:
         return None
+    # Gérer le cas liste (retourné par bd[p])
+    if isinstance(val, (list, tuple)):
+        val = val[0] if val else None
+        if val is None:
+            return None
     if isinstance(val, int):
         return val
     s = str(val)
@@ -198,16 +190,21 @@ def _apply_rule_manually(onto):
         print("[MANUAL] Classe FootballPlayer introuvable.")
         return
     count = 0
+    YP = onto.search_one(iri="*YoungPlayer")
+    bd_prop = onto.search_one(iri="*birthDate")
+    count_v = count_y = 0
     for p in list(FP.instances()):
-        # Essayer birthDate d'abord, puis hasBirthYear
-        bd  = getattr(p, "birthDate", None)
-        bdy = getattr(p, "hasBirthYear", None)
+        bd   = bd_prop[p] if bd_prop else getattr(p, "birthDate", None)
+        bdy  = getattr(p, "hasBirthYear", None)
         year = _parse_year(bd) or _parse_year(bdy)
-        if year is not None and year < 1990:
-            if VP not in p.is_a:
+        if year is not None:
+            if year < 1990 and VP not in p.is_a:
                 p.is_a.append(VP)
-                count += 1
-    print(f"[MANUAL] {count} joueur(s) classifié(s) comme VeteranPlayer.")
+                count_v += 1
+            elif year >= 1990 and YP is not None and YP not in p.is_a:
+                p.is_a.append(YP)
+                count_y += 1
+    print(f"[MANUAL] {count_v} VeteranPlayer, {count_y} YoungPlayer classifié(s).")
 
 
 # ── Extended rules demo ───────────────────────────────────────────────────────
@@ -276,38 +273,39 @@ def _owlready_load(owl_path: str, onto_iri: str):
 
 def _load_or_build(onto_iri):
     """
-    OWLReady2 ne lit pas le Turtle (.ttl) nativement.
-    Si ontology.ttl existe → conversion TTL→RDF/XML via rdflib puis chargement.
-    Si football_swrl.owl existe → chargement direct.
-    Sinon → construction depuis zéro avec des joueurs de démo.
+    1. Convertit ontology.ttl → RDF/XML (schéma uniquement)
+    2. Ajoute TOUJOURS les joueurs de démo car ontology.ttl ne contient pas d'individus
     """
-    # 1. Conversion TTL → OWL via rdflib
+    onto = None
+
+    # Conversion TTL → OWL
     if os.path.exists(ONTOLOGY_PATH):
-        converted = FOOTBALL_OWL_OUT
         try:
             from rdflib import Graph as RDFGraph
             print(f"[INFO] Conversion TTL → RDF/XML : {ONTOLOGY_PATH}")
             g = RDFGraph()
             g.parse(ONTOLOGY_PATH, format="turtle")
-            os.makedirs(os.path.dirname(converted), exist_ok=True)
-            g.serialize(destination=converted, format="xml")
-            print(f"[INFO] Chargement converti : {converted}")
-            return _owlready_load(converted, onto_iri)
+            os.makedirs(os.path.dirname(FOOTBALL_OWL_OUT), exist_ok=True)
+            g.serialize(destination=FOOTBALL_OWL_OUT, format="xml")
+            onto = _owlready_load(FOOTBALL_OWL_OUT, onto_iri)
         except Exception as e:
-            print(f"[WARN] Conversion TTL échouée ({e}). Construction depuis zéro.")
+            print(f"[WARN] Conversion TTL échouée ({e}).")
 
-    # 2. Charger football_swrl.owl s'il existe déjà
-    if os.path.exists(FOOTBALL_OWL_OUT):
-        print(f"[INFO] Chargement : {FOOTBALL_OWL_OUT}")
-        return _owlready_load(FOOTBALL_OWL_OUT, onto_iri)
+    if onto is None:
+        onto = get_ontology(onto_iri)
 
-    # 3. Construire depuis zéro
-    print("[INFO] Construction de l'ontologie football depuis zéro...")
-    onto = get_ontology(onto_iri)
-    onto = build_football_ontology(onto)
-    os.makedirs(os.path.dirname(FOOTBALL_OWL_OUT), exist_ok=True)
-    onto.save(file=FOOTBALL_OWL_OUT, format="rdfxml")
-    print(f"[SAVED] {FOOTBALL_OWL_OUT}")
+    # Vérifier si des individus existent déjà
+    FP = onto.search_one(iri="*FootballPlayer")
+    n_ind = len(list(FP.instances())) if FP else 0
+
+    if n_ind == 0:
+        print("[INFO] Pas d'individus → ajout des joueurs de démo...")
+        onto = build_football_ontology(onto)
+        onto.save(file=FOOTBALL_OWL_OUT, format="rdfxml")
+        print(f"[SAVED] {FOOTBALL_OWL_OUT}")
+    else:
+        print(f"[INFO] {n_ind} individu(s) trouvé(s).")
+
     return onto
 
 
@@ -319,11 +317,12 @@ def run():
     onto_iri = FOOTBALL_NS
     onto = _load_or_build(onto_iri)
 
+    bd_prop = onto.search_one(iri="*birthDate")
     def _born(p):
-        """Retourne la date/année de naissance depuis birthDate ou hasBirthYear."""
-        bd = getattr(p, "birthDate", None)
+        """Retourne la date depuis birthDate (via propriété indexée) ou hasBirthYear."""
+        bd = bd_prop[p] if bd_prop else []
         if bd:
-            return str(bd)[:10]
+            return str(bd[0])[:10] if isinstance(bd, list) else str(bd)[:10]
         by = getattr(p, "hasBirthYear", None)
         return str(by) if by else "?"
 

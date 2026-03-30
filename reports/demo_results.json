@@ -9,7 +9,7 @@
       "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 15.49
+      "time_s": 22.52
     }
   },
   {
@@ -22,7 +22,7 @@
       "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 7.23
+      "time_s": 7.16
     }
   },
   {
@@ -35,7 +35,7 @@
       "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 7.16
+      "time_s": 7.35
     }
   },
   {
@@ -48,7 +48,7 @@
       "attempts": 2,
       "success": true,
       "n_results": 20,
-      "time_s": 17.72
+      "time_s": 17.78
     }
   },
   {
@@ -56,12 +56,12 @@
     "baseline": "Young players: Bellingham (2003), Gavi (2004), Pedri (2002), Camavinga (2002), Yamal (2007)...",
     "baseline_source": "LLM (gemma:2b) sans KB",
     "rag": {
-      "answer": "Requête exécutée — aucun résultat dans la KB.",
-      "sparql": "PREFIX rdfs: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://example.com/>\n\nSELECT ?player ?label ?date WHERE {\n  ?player rdfs:label ?label .\n  ?player ex:birthDate ?date .\n  FILTER(?date > \"2000-01-01\"^^xsd:date)\n} LIMIT 20",
-      "attempts": 4,
+      "answer": "Trouvé 20 résultat(s) :\n  JjGabriel | JJ Gabriel | 2010-10-06\n  RioNgumoha | Rio Ngumoha | 2008-08-29\n  ToniFernndez | Toni Fernández | 2008-07-15\n  GodwillKukonki | Godwill Kukonki | 2008-02-06\n  NoahCodjoevora | Noah Codjo-Evora | 2007-08-16\n  FrancoMastantuono | Franco Mastantuono | 2007-08-14\n  ThiagoPitarch | Thiago Pitarch | 2007-08-03\n  LamineYamal | Lamine Yamal | 2007-07-13\n  TreyNyoni | Trey Nyoni | 2007-06-30\n  AndrsCuenca | Andrés Cuenca | 2007-06-11",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label ?date WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:birthDate ?date .\n  FILTER(?date > \"2000-01-01\"^^xsd:date)\n} ORDER BY DESC(?date) LIMIT 20",
+      "attempts": 1,
       "success": true,
-      "n_results": 0,
-      "time_s": 34.4
+      "n_results": 20,
+      "time_s": 15.26
     }
   }
 ]
