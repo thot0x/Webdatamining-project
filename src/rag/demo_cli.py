@@ -97,8 +97,8 @@ def print_header():
     print(BOLD("═" * 64))
     print(f"  KB      : {GREEN('✓ ' + os.path.basename(KB_PATH)) if kb_ok else RED('✗ introuvable')}")
     print(f"  LLM     : {'✓ ' + LLM_MODEL if _check_ollama() else RED('✗ Ollama absent — lance: ollama serve')}")
-    print(f"  Moteur  : {GREEN('rdflib local (sans Fuseki)')}")
-    print(f"  Baseline: {DIM('LLM seul (sans KB) vs RAG (LLM + KB)')}")
+    print(f"  Moteur  : {GREEN('rdflib')}")
+    print(f"  Baseline: {DIM('hardcoded vs RAG (LLM + KB)')}")
     print(BOLD("═" * 64))
 
 

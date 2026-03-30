@@ -4,7 +4,6 @@ Le LLM génère, valide, et corrige lui-même — pas de template hardcodé.
 """
 
 import os
-import re
 import json
 import time
 from typing import Optional, Tuple, List
@@ -15,9 +14,11 @@ from sparql_generator import (
     generate_sparql_ollama,
     clean_sparql,
     validate_sparql_syntax,
+    validate_sparql_semantics,
     execute_sparql,
     _check_ollama,
     _get_graph,
+    _build_query_from_keywords,
     SYSTEM_PROMPT,
     SPARQL_ENDPOINT,
     LLM_MODEL,
@@ -28,31 +29,27 @@ MAX_REPAIR_ATTEMPTS = 5   # 5 tentatives pour laisser le LLM corriger
 
 # ── Prompt de réparation ──────────────────────────────────────────────────────
 
-REPAIR_PROMPT_TEMPLATE = """A SPARQL query failed. Fix ONLY the syntax error and return the corrected query.
+REPAIR_PROMPT_TEMPLATE = """Fix this broken SPARQL query. Output ONLY the corrected query, nothing else.
 
-STRICT RULES:
-- Output ONLY the SPARQL query. No text before or after.
-- Start with PREFIX.
-- LIMIT must be AFTER the closing brace
-- No semicolon after LIMIT.
-- Triple patterns use semicolons: ?s a ex:Class ; prop ?o .
-- FILTER inside WHERE before the closing brace.
-- No AND keyword between patterns.
+RULES: Start with PREFIX. FILTER must be INSIDE WHERE before }}. LIMIT after }}.
 
-CORRECT PROPERTIES (use exactly these):
-- ex:birthDate ?date   (NOT xsd:date, NOT ?birthDate, NOT ex:date)
-- ex:hasNationality ex:UnitedKingdom  (NOT ex:nationality, NOT ?nationality)
-- ex:playsFor ex:ManchesterUnited
-- rdfs:label ?label
+FIX 1 — FILTER outside WHERE → move it inside:
+WRONG:  }} FILTER(?date < "1990-01-01"^^xsd:date) LIMIT 20
+RIGHT:  FILTER(?date < "1990-01-01"^^xsd:date) }} LIMIT 20
 
-CORRECT PATTERN for "born before YEAR and nationality":
-SELECT ?player ?label ?date WHERE {{
-  ?player a ex:FootballPlayer ;
-          rdfs:label ?label ;
-          ex:birthDate ?date ;
-          ex:hasNationality ex:UnitedKingdom .
-  FILTER(?date < "1990-01-01"^^xsd:date)
-}} LIMIT 20
+FIX 2 — Club filter missing → add ex:playsFor with exact URI:
+Q "players for Manchester United" → add:  ex:playsFor ex:ManchesterUnited .
+Q "players for Barcelona"         → add:  ex:playsFor ex:FcBarcelona .
+Q "players for Liverpool"         → add:  ex:playsFor ex:Liverpool .
+Q "players for Bayern Munich"     → add:  ex:playsFor ex:BayernMunich .
+Q "players for Real Madrid"       → add:  ex:playsFor ex:RealMadrid .
+Q "players for Manchester City"   → add:  ex:playsFor ex:ManchesterCity .
+
+FIX 3 — United Kingdom nationality → always use VALUES:
+  VALUES ?nat {{ ex:UnitedKingdom ex:UnitedKingdomOfGreatBritainAndIreland }}
+  ?player ex:hasNationality ?nat .
+
+PROPERTIES: rdfs:label, ex:birthDate (xsd:date), ex:hasNationality, ex:playsFor, ex:hasPosition, ex:birthPlace, ex:heightM
 
 Error: {error}
 Question: {question}
@@ -60,7 +57,7 @@ Question: {question}
 Broken query:
 {sparql}
 
-Fixed query (start with PREFIX):
+Fixed query:
 PREFIX"""
 
 
@@ -70,7 +67,7 @@ def repair_sparql(question: str, faulty: str, error: str,
                   model: str = LLM_MODEL) -> Optional[str]:
     """
     Envoie la requête cassée + l'erreur au LLM pour correction.
-    Le prompt se termine par 'PREFIX' pour forcer une continuation directe.
+    Retourne la requête nettoyée via clean_sparql, ou None si le LLM échoue.
     """
     if not _check_ollama():
         return None
@@ -94,9 +91,7 @@ def repair_sparql(question: str, faulty: str, error: str,
             data = json.loads(resp.read())
 
         raw = data.get("response", "").strip()
-        # Le prompt se termine par "PREFIX" → on reconstitue
-        full = "PREFIX" + raw if not raw.upper().startswith("PREFIX") else raw
-        return clean_sparql(full)
+        return clean_sparql(raw)
 
     except Exception as e:
         print(f"[REPAIR] Échec appel LLM : {e}")
@@ -135,11 +130,17 @@ def generate_and_repair(
         print("[ERROR] Ollama indisponible.")
         return "", None, repair_log
 
-    # Génération initiale
-    if verbose:
-        print(f"[GEN  ] Génération SPARQL via LLM ({LLM_MODEL})...")
-    raw            = generate_sparql_ollama(question, model=LLM_MODEL)
-    current_sparql = clean_sparql(raw)
+    # Génération initiale — keyword builder first, LLM fallback
+    built = _build_query_from_keywords(question)
+    if built:
+        if verbose:
+            print(f"[BUILD] Query assembled from keyword detection (no LLM needed).")
+        current_sparql = built
+    else:
+        if verbose:
+            print(f"[GEN  ] Génération SPARQL via LLM ({LLM_MODEL})...")
+        raw            = generate_sparql_ollama(question, model=LLM_MODEL)
+        current_sparql = clean_sparql(raw)
     current_error  = ""
 
     for attempt in range(1, max_attempts + 1):
@@ -159,30 +160,54 @@ def generate_and_repair(
                 "status":  "syntax_error",
             })
         else:
-            # ── Exécution ─────────────────────────────────────────────────────
-            results = execute_sparql(current_sparql, endpoint)
-
-            if results is not None and "error" not in results:
-                n = len(results.get("results", {}).get("bindings", []))
+            # ── Validation sémantique ─────────────────────────────────────────
+            ok_sem, msg_sem = validate_sparql_semantics(question, current_sparql)
+            if not ok_sem:
+                current_error = msg_sem
+                if verbose:
+                    print(f"[FAIL ] Sémantique invalide : {msg_sem}")
                 repair_log.append({
                     "attempt": attempt,
                     "sparql":  current_sparql,
-                    "error":   None,
-                    "status":  "success",
+                    "error":   msg_sem,
+                    "status":  "semantic_error",
                 })
-                if verbose:
-                    print(f"[OK   ] Succès en {attempt} tentative(s). {n} résultat(s).")
-                return current_sparql, results, repair_log
+            else:
+                # ── Exécution ─────────────────────────────────────────────────
+                results = execute_sparql(current_sparql, endpoint)
 
-            current_error = _extract_error(results, "Exécution échouée.")
-            if verbose:
-                print(f"[FAIL ] Erreur exécution : {current_error}")
-            repair_log.append({
-                "attempt": attempt,
-                "sparql":  current_sparql,
-                "error":   current_error,
-                "status":  "execution_error",
-            })
+                if results is not None and "error" not in results:
+                    n = len(results.get("results", {}).get("bindings", []))
+                    if n == 0 and attempt < max_attempts:
+                        current_error = "Query returned 0 results — may be semantically wrong (wrong club/nationality URI, wrong date direction, or wrong entity type)."
+                        if verbose:
+                            print(f"[WARN ] 0 résultat(s) — possible erreur sémantique, retry...")
+                        repair_log.append({
+                            "attempt": attempt,
+                            "sparql":  current_sparql,
+                            "error":   current_error,
+                            "status":  "empty_results",
+                        })
+                    else:
+                        repair_log.append({
+                            "attempt": attempt,
+                            "sparql":  current_sparql,
+                            "error":   None,
+                            "status":  "success",
+                        })
+                        if verbose:
+                            print(f"[OK   ] Succès en {attempt} tentative(s). {n} résultat(s).")
+                        return current_sparql, results, repair_log
+                else:
+                    current_error = _extract_error(results, "Exécution échouée.")
+                    if verbose:
+                        print(f"[FAIL ] Erreur exécution : {current_error}")
+                    repair_log.append({
+                        "attempt": attempt,
+                        "sparql":  current_sparql,
+                        "error":   current_error,
+                        "status":  "execution_error",
+                    })
 
         # ── Repair LLM ────────────────────────────────────────────────────────
         if attempt < max_attempts:
