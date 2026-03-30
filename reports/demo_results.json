@@ -4,12 +4,12 @@
     "baseline": "Historical players: Billy Meredith (1874), Steve Bloomer (1874), Bob Crompton (1879), Sam Hardy (1883)...",
     "baseline_source": "LLM (gemma:2b) sans KB",
     "rag": {
-      "answer": "Trouvé 20 résultat(s) :\n  GeorgeObrien | George O'Brien\n  AHAlbut | A. H. Albut\n  AlbertZoepfel | Albert Zoepfel\n  AlexRobertson | Alex Robertson\n  BillMccartney | Bill McCartney\n  BobMcfarlane | Bob McFarlane\n  ErichWeber | Erich Weber\n  ErnstSchottelius | Ernst Schottelius\n  HansBermhler | Hans Bermühler\n  HermannGeis | Hermann Geis",
-      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:birthDate ?date .\n  FILTER(?date < \"1920-01-01\"^^xsd:date)\n} ORDER BY ?date LIMIT 20",
+      "answer": "Trouvé 20 résultat(s) :\n  GeorgeObrien | George O'Brien | 1801-01-01\n  AHAlbut | A. H. Albut | 1849-01-01\n  AlbertZoepfel | Albert Zoepfel | 1850-01-01\n  AlexRobertson | Alex Robertson | 1850-01-01\n  BillMccartney | Bill McCartney | 1850-01-01\n  BobMcfarlane | Bob McFarlane | 1850-01-01\n  ErichWeber | Erich Weber | 1850-01-01\n  ErnstSchottelius | Ernst Schottelius | 1850-01-01\n  HansBermhler | Hans Bermühler | 1850-01-01\n  HermannGeis | Hermann Geis | 1850-01-01",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label ?date WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:birthDate ?date .\n  FILTER(?date < \"1920-01-01\"^^xsd:date)\n} ORDER BY ?date LIMIT 20",
       "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 22.52
+      "time_s": 5.35
     }
   },
   {
@@ -18,11 +18,11 @@
     "baseline_source": "LLM (gemma:2b) sans KB",
     "rag": {
       "answer": "Trouvé 20 résultat(s) :\n  AlexSong | Alex Song\n  AliBenarbia | Ali Benarbia\n  AliouneTour | Alioune Touré\n  AlouDiarra | Alou Diarra\n  AlyCissokho | Aly Cissokho\n  AnthonyLeTallec | Anthony Le Tallec\n  AntoineSibierski | Antoine Sibierski\n  AurlienTchouamni | Aurélien Tchouaméni\n  BacarySagna | Bacary Sagna\n  BernardDiomde | Bernard Diomède",
-      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:hasNationality ex:France .\n} LIMIT 20",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:hasNationality ex:France .\n} LIMIT 20",
       "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 7.16
+      "time_s": 2.06
     }
   },
   {
@@ -31,11 +31,11 @@
     "baseline_source": "LLM (gemma:2b) sans KB",
     "rag": {
       "answer": "Trouvé 20 résultat(s) :\n  AHAlbut | A. H. Albut\n  AaronHulme | Aaron Hulme\n  AaronTravis | Aaron Travis\n  AdamCarson | Adam Carson\n  AdamEckersley | Adam Eckersley\n  AdnanJanuzaj | Adnan Januzaj\n  AidanBarlow | Aidan Barlow\n  AidanMurphy | Aidan Murphy\n  AlanBrazil | Alan Brazil\n  AlanDavies | Alan Davies",
-      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:playsFor ex:ManchesterUnited .\n} LIMIT 20",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?player ?label WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:playsFor ex:ManchesterUnited .\n} LIMIT 20",
       "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 7.35
+      "time_s": 2.08
     }
   },
   {
@@ -43,12 +43,12 @@
     "baseline": "UK players born before 1990: Beckham (1975), Gerrard (1980), Lampard (1978), Scholes (1974), Rooney (1985)...",
     "baseline_source": "LLM (gemma:2b) sans KB",
     "rag": {
-      "answer": "Trouvé 20 résultat(s) :\n  AHAlbut | A. H. Albut | 1849-01-01\n  AaronHulme | Aaron Hulme | 1886-04-01\n  AaronTravis | Aaron Travis | 1890-03-28\n  AbeHartley | Abe Hartley | 1872-02-08\n  AbeRosenthal | Abe Rosenthal | 1921-10-12\n  AbelXavier | Abel Xavier | 1972-11-30\n  AbelardoFernndez | Abelardo Fernández | 1970-03-19\n  AbelardoRiera | Abelardo Riera | 1912-12-13\n  AbrahamFoxall | Abraham Foxall | 1874-01-01\n  AbrahamGonzlezCasanova | Abraham González Casanova | 1985-07-16",
-      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label ?date WHERE {\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:birthDate ?date .\n  FILTER(?date < \"1990-01-01\"^^xsd:date)\n} LIMIT 20",
-      "attempts": 2,
+      "answer": "Trouvé 20 résultat(s) :\n  GeorgeObrien | George O'Brien | 1801-01-01\n  AHAlbut | A. H. Albut | 1849-01-01\n  AlexRobertson | Alex Robertson | 1850-01-01\n  BillMccartney | Bill McCartney | 1850-01-01\n  BobMcfarlane | Bob McFarlane | 1850-01-01\n  WilliamThomson | William Thomson | 1850-01-01\n  JohnMckenna | John McKenna | 1855-01-03\n  JamesWest | James West | 1857-07-26\n  LawrenceFurniss | Lawrence Furniss | 1858-01-01\n  TomHay | Tom Hay | 1858-07-01",
+      "sparql": "PREFIX ex: <http://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nSELECT ?player ?label ?date WHERE {\n  VALUES ?nat { ex:UnitedKingdom ex:UnitedKingdomOfGreatBritainAndIreland }\n  ?player a ex:FootballPlayer ;\n          rdfs:label ?label ;\n          ex:hasNationality ?nat ;\n          ex:birthDate ?date .\n  FILTER(?date < \"1990-01-01\"^^xsd:date)\n} ORDER BY ?date LIMIT 20",
+      "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 17.78
+      "time_s": 2.5
     }
   },
   {
@@ -61,7 +61,7 @@
       "attempts": 1,
       "success": true,
       "n_results": 20,
-      "time_s": 15.26
+      "time_s": 2.46
     }
   }
 ]
