@@ -39,8 +39,6 @@ and get answers directly from the KB — no hallucination, no internet lookup.
 ├── kge_data/                         # Formatted data for KGE model training
 │
 ├── src/
-│   ├── crawl/                        # Web crawler
-│   ├── ie/                           # Information extraction
 │   ├── kg/                           # KB construction
 │   ├── kge/                          # Knowledge Graph Embeddings
 │   ├── reason/                       # OWL reasoning / inference
