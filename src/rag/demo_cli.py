@@ -97,8 +97,8 @@ def print_header():
     print(BOLD("═" * 64))
     print(f"  KB      : {GREEN('✓ ' + os.path.basename(KB_PATH)) if kb_ok else RED('✗ introuvable')}")
     print(f"  LLM     : {'✓ ' + LLM_MODEL if _check_ollama() else RED('✗ Ollama absent — lance: ollama serve')}")
-    print(f"  Moteur  : {GREEN('rdflib')}")
-    print(f"  Baseline: {DIM('hardcoded vs RAG (LLM + KB)')}")
+    print(f"  Moteur  : {GREEN('rdflib local')}")
+    print(f"  Baseline: {DIM('Hardcoded vs RAG (LLM + KB)')}")
     print(BOLD("═" * 64))
 
 
@@ -107,20 +107,20 @@ def print_comparison(question: str, baseline: str, rag: dict, idx: int):
     print()
 
     # Baseline LLM sans KB
-    print(f"  {YELLOW('▶ BASELINE')} {DIM('(réponse statique — sans KB)')}")
+    print(f"  {YELLOW('▶ BASELINE')} {DIM('(static answer)')}")
     for line in baseline.strip().splitlines():
         print(f"    {line}")
     print()
 
     # RAG
     attempts_detail = f" [{rag['attempts']} tentatives LLM]" if rag["attempts"] > 1 else ""
-    status = GREEN(f"✓ SUCCESS ({rag['n_results']} résultats KB)") if rag["success"] else RED("✗ ÉCHEC LLM")
+    status = GREEN(f"✓ SUCCESS ({rag['n_results']} KB results)") if rag["success"] else RED("✗ LLM FAILURE")
     print(f"  {GREEN('▶ RAG PIPELINE')} [{status}]{attempts_detail} [{rag['time_s']}s]")
     for line in rag["answer"].strip().splitlines():
         print(f"    {line}")
 
     # SPARQL généré
-    print(f"\n  {DIM('SPARQL généré par LLM :')}")
+    print(f"\n  {DIM('LLM generated SPARQL :')}")
     for line in rag["sparql"].strip().splitlines()[:8]:
         print(f"    {DIM(line)}")
     if rag["sparql"].count("\n") > 7:
@@ -142,7 +142,7 @@ def print_comparison(question: str, baseline: str, rag: dict, idx: int):
 # ── Mode interactif ───────────────────────────────────────────────────────────
 
 def interactive_loop():
-    print(f"\n{BOLD('Mode interactif')} — pose ta question football, ou tape quit.\n")
+    print(f"\n{BOLD('Interactive mode')} — Ask your football question\n")
     while True:
         try:
             q = input(CYAN("Question : ")).strip()
@@ -159,12 +159,12 @@ def interactive_loop():
         print(f"\n{GREEN('Réponse :')}")
         for line in result["answer"].splitlines():
             print(f"  {line}")
-        print(f"\n{DIM('SPARQL généré :')}")
+        print(f"\n{DIM('generated SPARQL :')}")
         for line in result["sparql"].strip().splitlines():
             print(f"  {DIM(line)}")
         if result["attempts"] > 1:
             n_att = result["attempts"]
-            print(DIM(f"  ({n_att} tentatives LLM)"))
+            print(DIM(f"  ({n_att} LLM attempts)"))
         print()
 
 
@@ -177,7 +177,7 @@ def run(interactive: bool = False):
         interactive_loop()
         return
 
-    print(f"\n{BOLD('5 questions — Baseline (LLM sans KB) vs RAG (LLM + KB)')}\n")
+    print(f"\n{BOLD('5 questions — Baseline (hardcoded) vs RAG (LLM + KB)')}\n")
 
     summary = []
     for i, question in enumerate(DEMO_QUESTIONS, start=1):
@@ -212,12 +212,12 @@ def run(interactive: bool = False):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2, ensure_ascii=False)
-    print(f"[SAVED] Résultats → {out}")
+    print(f"[SAVED] Results → {out}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Football KG RAG Demo CLI")
     parser.add_argument("--interactive", "-i", action="store_true",
-                        help="Mode interactif")
+                        help="Interactive mode")
     args = parser.parse_args()
     run(interactive=args.interactive)
